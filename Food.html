@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Diet Tracker — 85kg → 70kg</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#14b8a6" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Diet" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="icon" type="image/png" href="icon-192.png" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --ink: #1f2937;
+    --ink-2: #4b5563;
+    --muted: #9ca3af;
+    --line: #eef0f3;
+    --accent: #14b8a6;
+    --accent-2: #0d9488;
+    --orange: #f59e0b;
+    --red: #ef4444;
+    --purple: #a855f7;
+    --green: #22c55e;
+    --shadow: 0 4px 20px rgba(17,24,39,0.06);
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+  }
+  .app {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ========== HEADER CARD ========== */
+  .head-card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 18px 18px 14px;
+    box-shadow: var(--shadow);
+  }
+  .head-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all .15s;
+  }
+  .icon-btn:hover { background: var(--accent); color: #fff; }
+  .day-nav {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 700;
+    font-size: 1.15rem;
+  }
+  .day-nav button {
+    background: none; border: none; cursor: pointer;
+    color: var(--ink); font-size: 1.1rem; padding: 4px;
+    display: flex; align-items: center;
+  }
+  .day-nav button:hover { color: var(--accent); }
+  .head-actions { display: flex; gap: 8px; }
+
+  .target-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent-2);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 12px;
+    margin-bottom: 16px;
+  }
+  .target-row .menu-ico {
+    display: flex; flex-direction: column; gap: 2.5px;
+  }
+  .target-row .menu-ico span {
+    width: 14px; height: 2px; background: var(--accent-2); border-radius: 1px;
+  }
+
+  /* ========== RINGS ========== */
+  .rings {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 4px 0 8px;
+    gap: 4px;
+  }
+  .ring-wrap { text-align: center; flex: 1; }
+  .ring {
+    position: relative;
+    width: 110px; height: 110px;
+    margin: 0 auto 6px;
+  }
+  .ring svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+  .ring-bg { fill: none; stroke: #f3f4f6; stroke-width: 10; }
+  .ring-fg { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dasharray .6s ease; }
+  .ring-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .ring-num { font-size: 1.35rem; font-weight: 700; color: var(--ink); line-height: 1; }
+  .ring-unit { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+  .ring-label { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
+
+  .pager {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; margin-top: 8px;
+  }
+  .pager button {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 0.85rem; padding: 2px 4px;
+  }
+  .pager button:hover { color: var(--ink); }
+  .dots { display: flex; gap: 6px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #d1d5db; }
+  .dot.active { background: var(--ink); }
+
+  /* ========== MEAL CARDS ========== */
+  .meal-card {
+    background: var(--card);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .meal-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    background: #f0fdfa;
+    cursor: pointer;
+    user-select: none;
+  }
+  .meal-head .plus {
+    width: 26px; height: 26px;
+    color: var(--accent-2);
+    font-size: 1.5rem; font-weight: 300;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .meal-head-text { flex: 1; }
+  .meal-head h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .meal-head .macros {
+    font-size: 0.78rem;
+    color: var(--ink-2);
+    line-height: 1.4;
+  }
+  .chev {
+    color: var(--ink-2);
+    font-size: 1rem;
+    transition: transform .25s;
+  }
+  .meal-card.collapsed .chev { transform: rotate(-90deg); }
+  .meal-card.collapsed .meal-items { display: none; }
+
+  .meal-items { background: #fff; }
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--line);
+  }
+  .item-ico {
+    width: 28px; height: 28px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+  }
+  .item-body { flex: 1; min-width: 0; }
+  .item-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+    line-height: 1.25;
+  }
+  .item-meta {
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .item-cal {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .item-cal .num {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .item-cal .num.burn { color: var(--orange); }
+  .item-cal .unit {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ========== DAY TABS (scroll) ========== */
+  .day-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 2px 8px;
+    scrollbar-width: none;
+  }
+  .day-tabs::-webkit-scrollbar { display: none; }
+  .day-tab {
+    flex: 0 0 auto;
+    background: var(--card);
+    color: var(--ink-2);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: var(--shadow);
+    font-family: inherit;
+    white-space: nowrap;
+    transition: all .15s;
+  }
+  .day-tab:hover { background: #f9fafb; }
+  .day-tab.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .day-tab.is-today::after {
+    content: " •";
+    color: var(--orange);
+    font-weight: bold;
+  }
+  .day-tab.active.is-today::after { color: #fff; }
+
+  /* ========== TIPS ========== */
+  .tips {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+  }
+  .tips h2 {
+    color: var(--ink);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tips h2::before {
+    content: "💡";
+    font-size: 1.1rem;
+  }
+  .tips ul { list-style: none; padding: 0; }
+  .tips li {
+    padding: 8px 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--ink-2);
+    border-bottom: 1px solid var(--line);
+    display: flex; gap: 10px;
+  }
+  .tips li:last-child { border-bottom: none; }
+  .tips li::before {
+    content: "✓";
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .summary-card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 14px 18px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    text-align: center;
+  }
+  .summary-card div strong {
+    display: block;
+    color: var(--accent-2);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .summary-card div span {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 380px) {
+    .ring { width: 95px; height: 95px; }
+    .ring-num { font-size: 1.15rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HEADER CARD -->
+  <div class="head-card">
+    <div class="head-top">
+      <button class="icon-btn" title="Done">✓</button>
+      <div class="day-nav">
+        <button id="prevDay" aria-label="Previous">‹</button>
+        <span id="dayLabel">Today</span>
+        <button id="nextDay" aria-label="Next">›</button>
+      </div>
+      <div class="head-actions">
+        <button class="icon-btn" title="Add">+</button>
+        <button class="icon-btn" title="More">⋯</button>
+      </div>
+    </div>
+    <div class="target-row">
+      <span class="menu-ico"><span></span><span></span><span></span></span>
+      <span id="targetLabel">Default Macronutrient Targets</span>
+    </div>
+
+    <div class="rings">
+      <div class="ring-wrap">
+        <div class="ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="50" />
+            <circle class="ring-fg" id="ring-consumed" cx="60" cy="60" r="50"
+                    stroke="url(#g-consumed)" />
+            <defs>
+              <linearGradient id="g-consumed" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#14b8a6" />
+                <stop offset="100%" stop-color="#f59e0b" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-num" id="num-consumed">0</div>
+            <div class="ring-unit">kcal</div>
+          </div>
+        </div>
+        <div class="ring-label">Consumed</div>
+      </div>
+
+      <div class="ring-wrap">
+        <div class="ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="50" />
+            <circle class="ring-fg" id="ring-target" cx="60" cy="60" r="50"
+                    stroke="url(#g-target)" />
+            <defs>
+              <linearGradient id="g-target" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f59e0b" />
+                <stop offset="100%" stop-color="#a855f7" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-num" id="num-target">0</div>
+            <div class="ring-unit">kcal</div>
+          </div>
+        </div>
+        <div class="ring-label">Target</div>
+      </div>
+
+      <div class="ring-wrap">
+        <div class="ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="50" />
+            <circle class="ring-fg" id="ring-remaining" cx="60" cy="60" r="50"
+                    stroke="#cbd5e1" />
+          </svg>
+          <div class="ring-center">
+            <div class="ring-num" id="num-remaining">0</div>
+            <div class="ring-unit">kcal</div>
+          </div>
+        </div>
+        <div class="ring-label">Remaining</div>
+      </div>
+    </div>
+
+    <div class="pager">
+      <button>‹</button>
+      <div class="dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <button>›</button>
+    </div>
+  </div>
+
+  <!-- DAY TABS -->
+  <div class="day-tabs" id="tabs"></div>
+
+  <!-- MEAL CARDS -->
+  <div id="meals"></div>
+
+  <!-- SUMMARY -->
+  <div class="summary-card">
+    <div><strong>15 kg</strong><span>To lose</span></div>
+    <div><strong>1.25 kg</strong><span>Per week</span></div>
+    <div><strong>600 kcal</strong><span>Deficit</span></div>
+    <div><strong>3 mo</strong><span>Timeline</span></div>
+  </div>
+
+  <!-- TIPS -->
+  <div class="tips">
+    <h2>Important Tips</h2>
+    <ul>
+      <li>Drink 3–4 L water daily. Start morning with warm lemon water.</li>
+      <li>Walk 45 min/day OR 30 min brisk + 15 min yoga.</li>
+      <li>Stop eating 3 hours before sleep.</li>
+      <li>Use 1 tsp oil per meal max. Prefer mustard / cold-pressed.</li>
+      <li>No sugar, maida, fried snacks, soft drinks.</li>
+      <li>Roti = thin, no ghee. Rice = ½ katori only.</li>
+      <li>Snack (4 PM): green tea + 5 almonds OR 1 fruit.</li>
+      <li>Weigh weekly, same time, empty stomach.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+/* ========== DATA ==========
+   Each meal item: name, time, qty, kcal, icon (emoji guaranteed to match dish).
+   Macros computed approx per meal. Burn entry shows daily walk.
+*/
+const plan = [
+  {
+    day: "Monday",
+    target: "Default Macronutrient Targets",
+    breakfast: {
+      total: 350, p: 8, c: 62, f: 7,
+      items: [
+        { name: "Vegetable Poha", time: "8:00 am", qty: "1 bowl", kcal: 250, ico: "🍚" },
+        { name: "Masala Chai (low sugar)", time: "8:15 am", qty: "1 cup", kcal: 60, ico: "🍵" },
+        { name: "Almonds", time: "8:30 am", qty: "5 pcs", kcal: 40, ico: "🌰" }
+      ]
+    },
+    lunch: {
+      total: 550, p: 22, c: 78, f: 14,
+      items: [
+        { name: "Whole Wheat Roti", time: "1:00 pm", qty: "2 pcs", kcal: 240, ico: "🫓" },
+        { name: "Mixed Veg Sabzi", time: "1:00 pm", qty: "1 katori", kcal: 130, ico: "🥬" },
+        { name: "Moong Dal", time: "1:00 pm", qty: "1 katori", kcal: 130, ico: "🥣" },
+        { name: "Cucumber Tomato Salad", time: "1:00 pm", qty: "1 plate", kcal: 50, ico: "🥒" }
+      ]
+    },
+    dinner: {
+      total: 450, p: 18, c: 65, f: 10,
+      items: [
+        { name: "Moong Dal Khichdi", time: "8:00 pm", qty: "1 bowl", kcal: 350, ico: "🥘" },
+        { name: "Plain Curd", time: "8:00 pm", qty: "1 katori", kcal: 100, ico: "🥛" }
+      ]
+    },
+    burn: { name: "Brisk Walk", time: "60 mins", kcal: 365, ico: "🏃" }
+  },
+  {
+    day: "Tuesday",
+    target: "Default Macronutrient Targets",
+    breakfast: {
+      total: 320, p: 9, c: 55, f: 8,
+      items: [
+        { name: "Vegetable Upma", time: "8:00 am", qty: "1 bowl", kcal: 260, ico: "🍲" },
+        { name: "Green Tea", time: "8:15 am", qty: "1 cup", kcal: 5, ico: "🍵" },
+        { name: "Banana", time: "8:30 am", qty: "½ pc", kcal: 55, ico: "🍌" }
+      ]
+    },
+    lunch: {
+      total: 580, p: 26, c: 70, f: 18,
+      items: [
+        { name: "Whole Wheat Roti", time: "1:00 pm", qty: "2 pcs", kcal: 240, ico: "🫓" },
+        { name: "Palak Paneer (low fat)", time: "1:00 pm", qty: "1 katori", kcal: 280, ico: "🥬" },
+        { name: "Onion Salad", time: "1:00 pm", qty: "1 plate", kcal: 60, ico: "🧅" }
+      ]
+    },
+    dinner: {
+      total: 400, p: 14, c: 68, f: 6,
+      items: [
+        { name: "Vegetable Daliya", time: "8:00 pm", qty: "1 bowl", kcal: 340, ico: "🌾" },
+        { name: "Buttermilk", time: "8:00 pm", qty: "1 glass", kcal: 60, ico: "🥛" }
+      ]
+    },
+    burn: { name: "Brisk Walk", time: "55 mins", kcal: 340, ico: "🏃" }
+  },
+  {
+    day: "Wednesday",
+    target: "Default Macronutrient Targets",
+    breakfast: {
+      total: 340, p: 14, c: 40, f: 12,
+      items: [
+        { name: "Besan Chilla", time: "8:00 am", qty: "2 pcs", kcal: 280, ico: "🥞" },
+        { name: "Mint Chutney", time: "8:00 am", qty: "2 tbsp", kcal: 20, ico: "🌿" },
+        { name: "Black Coffee", time: "8:15 am", qty: "1 cup", kcal: 5, ico: "☕" },
+        { name: "Apple", time: "11:00 am", qty: "½ pc", kcal: 35, ico: "🍎" }
+      ]
+    },
+    lunch: {
+      total: 600, p: 24, c: 90, f: 12,
+      items: [
+        { name: "Whole Wheat Roti", time: "1:00 pm", qty: "2 pcs", kcal: 240, ico: "🫓" },
+        { name: "Rajma Curry", time: "1:00 pm", qty: "1 katori", kcal: 280, ico: "🫘" },
+        { name: "Green Salad", time: "1:00 pm", qty: "1 plate", kcal: 80, ico: "🥗" }
+      ]
+    },
+    dinner: {
+      total: 450, p: 16, c: 70, f: 10,
+      items: [
+        { name: "Tomato Soup", time: "7:30 pm", qty: "1 bowl", kcal: 90, ico: "🍅" },
+        { name: "Multigrain Roti", time: "8:00 pm", qty: "2 pcs", kcal: 220, ico: "🫓" },
+        { name: "Bhindi Sabzi", time: "8:00 pm", qty: "1 katori", kcal: 140, ico: "🥒" }
+      ]
+    },
+    burn: { name: "Brisk Walk", time: "60 mins", kcal: 365, ico: "🏃" }
+  },
+  {
+    day: "Thursday",
+    target: "Default Macronutrient Targets",
+    breakfast: {
+      total: 360, p: 12, c: 60, f: 8,
+      items: [
+        { name: "Idli", time: "8:00 am", qty: "2 pcs", kcal: 140, ico: "🍥" },
+        { name: "Sambar", time: "8:00 am", qty: "1 katori", kcal: 160, ico: "🥣" },
+        { name: "Coconut Chutney", time: "8:00 am", qty: "1 tbsp", kcal: 60, ico: "🥥" }
+      ]
+    },
+    lunch: {
+      total: 580, p: 24, c: 88, f: 12,
+      items: [
+        { name: "Whole Wheat Roti", time: "1:00 pm", qty: "2 pcs", kcal: 240, ico: "🫓" },
+        { name: "Chana Masala", time: "1:00 pm", qty: "1 katori", kcal: 240, ico: "🥣" },
+        { name: "Plain Curd", time: "1:00 pm", qty: "1 katori", kcal: 100, ico: "🥛" }
+      ]
+    },
+    dinner: {
+      total: 420, p: 14, c: 60, f: 12,
+      items: [
+        { name: "Mixed Veg Sabzi", time: "8:00 pm", qty: "1 katori", kcal: 160, ico: "🥦" },
+        { name: "Jowar Roti", time: "8:00 pm", qty: "2 pcs", kcal: 220, ico: "🫓" },
+        { name: "Salad", time: "8:00 pm", qty: "1 plate", kcal: 40, ico: "🥗" }
+      ]
+    },
+    burn: { name: "Brisk Walk", time: "60 mins", kcal: 365, ico: "🏃" }
+  },
+  {
+    day: "Friday",
+    target: "Default Macronutrient Targets",
+    breakfast: {
+      total: 330, p: 18, c: 35, f: 12,
+      items: [
+        { name: "Sprouts Salad", time: "8:00 am", qty: "1 bowl", kcal: 200, ico: "🌱" },
+        { name: "Paneer Cubes", time: "8:00 am", qty: "30 g", kcal: 80, ico: "🧀" },
+        { name: "Lemon Water", time: "7:30 am", qty: "1 glass", kcal: 10, ico: "🍋" },
+        { name: "Almonds", time: "11:00 am", qty: "5 pcs", kcal: 40, ico: "🌰" }
+      ]
+    },
+    lunch: {
+      total: 590, p: 18, c: 95, f: 12,
+      items: [
+        { name: "Whole Wheat Roti", time: "1:00 pm", qty: "2 pcs", kcal: 240, ico: "🫓" },
+        { name: "Aloo-Gobi", time: "1:00 pm", qty: "1 katori", kcal: 180, ico: "🥔" },
+        { name: "Toor Dal", time: "1:00 pm", qty: "1 katori", kcal: 130, ico: "🥣" },
+        { name: "Salad", time: "1:00 pm", qty: "1 plate", kcal: 40, ico: "🥗" }
+      ]
+    },
+    dinner: {
+      total: 400, p: 14, c: 50, f: 14,
+      items: [
+        { name: "Vegetable Soup", time: "7:30 pm", qty: "1 bowl", kcal: 100, ico: "🍜" },
+        { name: "Besan Chilla", time: "8:00 pm", qty: "2 pcs", kcal: 280, ico: "🥞" },
+        { name: "Mint Chutney", time: "8:00 pm", qty: "1 tbsp", kcal: 20, ico: "🌿" }
+      ]
+    },
+    burn: { name: "Brisk Walk", time: "55 mins", kcal: 340, ico: "🏃" }
+  },
+  {
+    day: "Saturday",
+    target: "Default Macronutrient Targets",
+    breakfast: {
+      total: 360, p: 12, c: 50, f: 12,
+      items: [
+        { name: "Methi Thepla", time: "8:00 am", qty: "2 pcs", kcal: 260, ico: "🫓" },
+        { name: "Plain Curd", time: "8:00 am", qty: "1 katori", kcal: 100, ico: "🥛" }
+      ]
+    },
+    lunch: {
+      total: 570, p: 22, c: 82, f: 14,
+      items: [
+        { name: "Whole Wheat Roti", time: "1:00 pm", qty: "2 pcs", kcal: 240, ico: "🫓" },
+        { name: "Baingan Bharta", time: "1:00 pm", qty: "1 katori", kcal: 180, ico: "🍆" },
+        { name: "Moong Dal", time: "1:00 pm", qty: "1 katori", kcal: 110, ico: "🥣" },
+        { name: "Salad", time: "1:00 pm", qty: "1 plate", kcal: 40, ico: "🥗" }
+      ]
+    },
+    dinner: {
+      total: 450, p: 24, c: 50, f: 16,
+      items: [
+        { name: "Paneer Bhurji", time: "8:00 pm", qty: "1 katori", kcal: 240, ico: "🧀" },
+        { name: "Whole Wheat Roti", time: "8:00 pm", qty: "2 pcs", kcal: 180, ico: "🫓" },
+        { name: "Cucumber Salad", time: "8:00 pm", qty: "1 plate", kcal: 30, ico: "🥒" }
+      ]
+    },
+    burn: { name: "Brisk Walk + Yoga", time: "75 mins", kcal: 410, ico: "🧘" }
+  },
+  {
+    day: "Sunday",
+    target: "Default Macronutrient Targets",
+    breakfast: {
+      total: 310, p: 11, c: 50, f: 7,
+      items: [
+        { name: "Masala Oats", time: "8:00 am", qty: "1 bowl", kcal: 250, ico: "🥣" },
+        { name: "Green Tea", time: "8:15 am", qty: "1 cup", kcal: 5, ico: "🍵" },
+        { name: "Papaya", time: "11:00 am", qty: "1 cup", kcal: 55, ico: "🍈" }
+      ]
+    },
+    lunch: {
+      total: 600, p: 18, c: 100, f: 12,
+      items: [
+        { name: "Whole Wheat Roti", time: "1:00 pm", qty: "1 pc", kcal: 120, ico: "🫓" },
+        { name: "Jeera Rice", time: "1:00 pm", qty: "½ katori", kcal: 160, ico: "🍚" },
+        { name: "Kadhi", time: "1:00 pm", qty: "1 katori", kcal: 180, ico: "🥣" },
+        { name: "Seasonal Sabzi", time: "1:00 pm", qty: "1 katori", kcal: 140, ico: "🥗" }
+      ]
+    },
+    dinner: {
+      total: 420, p: 26, c: 30, f: 18,
+      items: [
+        { name: "Tomato-Carrot Soup", time: "7:30 pm", qty: "1 bowl", kcal: 110, ico: "🍅" },
+        { name: "Grilled Paneer Tikka", time: "8:00 pm", qty: "70 g", kcal: 230, ico: "🍢" },
+        { name: "Mint Chutney", time: "8:00 pm", qty: "1 tbsp", kcal: 20, ico: "🌿" },
+        { name: "Salad", time: "8:00 pm", qty: "1 plate", kcal: 60, ico: "🥗" }
+      ]
+    },
+    burn: { name: "Long Walk", time: "75 mins", kcal: 450, ico: "🚶" }
+  }
+];
+
+const TARGET_KCAL = 1500;
+const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+let currentIdx = Math.max(0, plan.findIndex(p => p.day === todayName));
+
+const tabsEl = document.getElementById('tabs');
+const mealsEl = document.getElementById('meals');
+const dayLabel = document.getElementById('dayLabel');
+const targetLabel = document.getElementById('targetLabel');
+
+/* ========== RING ANIM ========== */
+const RING_C = 2 * Math.PI * 50; // r=50
+function setRing(id, pct) {
+  const el = document.getElementById(id);
+  const len = Math.max(0, Math.min(1, pct)) * RING_C;
+  el.style.strokeDasharray = `${len} ${RING_C}`;
+}
+
+function renderRings(consumed, burned) {
+  const target = TARGET_KCAL;
+  const remaining = Math.max(0, target - consumed + burned);
+
+  document.getElementById('num-consumed').textContent = consumed;
+  document.getElementById('num-target').textContent = target;
+  document.getElementById('num-remaining').textContent = remaining;
+
+  setRing('ring-consumed', consumed / target);
+  setRing('ring-target', 1);
+  setRing('ring-remaining', remaining / target);
+}
+
+/* ========== MEAL CARD RENDER ========== */
+function mealCard(label, meal) {
+  return `
+    <div class="meal-card" data-meal="${label}">
+      <div class="meal-head" onclick="this.parentElement.classList.toggle('collapsed')">
+        <div class="plus">+</div>
+        <div class="meal-head-text">
+          <h3>${label[0].toUpperCase() + label.slice(1)}</h3>
+          <div class="macros">${meal.total} kcals, ${meal.p} g protein, ${meal.c} g carbs, ${meal.f} g fat</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="meal-items">
+        ${meal.items.map(it => `
+          <div class="item">
+            <div class="item-ico">${it.ico}</div>
+            <div class="item-body">
+              <div class="item-name">${it.name}</div>
+              <div class="item-meta">⏱ ${it.time} · ${it.qty}</div>
+            </div>
+            <div class="item-cal">
+              <div class="num">${it.kcal}</div>
+              <div class="unit">kcal</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+function burnCard(burn) {
+  return `
+    <div class="meal-card">
+      <div class="meal-items">
+        <div class="item">
+          <div class="item-ico" style="color:#14b8a6;">${burn.ico}</div>
+          <div class="item-body">
+            <div class="item-name">${burn.name}</div>
+            <div class="item-meta">⏱ ${burn.time}</div>
+          </div>
+          <div class="item-cal">
+            <div class="num burn">-${burn.kcal}</div>
+            <div class="unit">kcal</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderDay(idx) {
+  currentIdx = (idx + plan.length) % plan.length;
+  const d = plan[currentIdx];
+  const isToday = d.day === todayName;
+
+  dayLabel.textContent = isToday ? "Today" : d.day;
+  targetLabel.textContent = `${d.day} - ${d.target}`;
+
+  const consumed = d.breakfast.total + d.lunch.total + d.dinner.total;
+  const burned = d.burn.kcal;
+  renderRings(consumed, burned);
+
+  mealsEl.innerHTML =
+    mealCard('breakfast', d.breakfast) +
+    mealCard('lunch', d.lunch) +
+    mealCard('dinner', d.dinner) +
+    burnCard(d.burn);
+
+  document.querySelectorAll('.day-tab').forEach((btn, i) => {
+    btn.classList.toggle('active', i === currentIdx);
+  });
+}
+
+/* ========== DAY TABS ========== */
+plan.forEach((d, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'day-tab' + (d.day === todayName ? ' is-today' : '');
+  btn.textContent = d.day.slice(0, 3);
+  btn.title = d.day + (d.day === todayName ? ' (Today)' : '');
+  btn.addEventListener('click', () => renderDay(i));
+  tabsEl.appendChild(btn);
+});
+
+document.getElementById('prevDay').addEventListener('click', () => renderDay(currentIdx - 1));
+document.getElementById('nextDay').addEventListener('click', () => renderDay(currentIdx + 1));
+
+renderDay(currentIdx);
+
+/* ========== PWA: register service worker ========== */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
+  });
+}
+</script>
+
+</body>
+</html>
